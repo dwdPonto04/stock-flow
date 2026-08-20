@@ -9,13 +9,14 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 
 @Entity
-@Table(name="users")
+@Table(name = "users")
 public class User {
 
     @Id
@@ -23,23 +24,27 @@ public class User {
     private Long id;
 
     @NotBlank
-    @Size(max = 50)
-    @Column(name="name",length = 50, nullable = false)
+    @Size(max = 100)
+    @Column(name = "name", length = 100, nullable = false)
+    @Setter
     private String name;
 
     @NotBlank
     @Email
     @Size(max = 100)
-    @Column(name="email",length = 100, nullable = false, unique = true)
+    @Column(name = "email", length = 100, nullable = false, unique = true)
+    @Setter
     private String email;
 
     @NotBlank
     @Size(max = 60)
-    @Column(name = "password",length = 60,nullable = false)
+    @Column(name = "password", length = 60, nullable = false)
+    @Setter
     private String password;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Setter
     private Role role;
 }
