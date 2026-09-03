@@ -1,6 +1,7 @@
 package com.dwdponto04.stockflow.business.user.service;
 
 import com.dwdponto04.stockflow.business.user.dto.request.CreateUserRequestDTO;
+import com.dwdponto04.stockflow.business.user.dto.request.UpdateUserRequestDTO;
 import com.dwdponto04.stockflow.business.user.dto.response.UserResponseDTO;
 import com.dwdponto04.stockflow.business.user.entity.User;
 import com.dwdponto04.stockflow.business.user.enums.Role;
@@ -33,24 +34,10 @@ public class UserService {
         userRepository.save(user);
     }
 
-    private void validateEmailNotExists(String email) {
-        if (userRepository.existsByEmail(email)) {
-            throw new ConflictException("E-mail já cadastrado ");
-        }
-    }
-
     public UserResponseDTO findById(Long id) {
-
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException("ID inválido");
-        }
-
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+        User user = findUserById(id);
         return toResponseDTO(user);
-
     }
-
 
     public UserResponseDTO findByEmail(String email) {
         if (email == null || email.isBlank()) {
@@ -60,8 +47,40 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         return toResponseDTO(user);
+    }
 
+    public List<UserResponseDTO> findAll() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
+    }
 
+    public UserResponseDTO update(Long id,
+                                  UpdateUserRequestDTO updateUserRequestDTO) {
+        User user = findUserById(id);
+        String name = updateUserRequestDTO.name().trim();
+        String email = updateUserRequestDTO.email().trim().toLowerCase();
+        validateEmailNotExistsForAnotherUser(email, id);
+        user.setName(name);
+        user.setEmail(email);
+        userRepository.save(user);
+        return toResponseDTO(user);
+    }
+
+    private void validateEmailNotExists(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new ConflictException("E-mail já cadastrado ");
+        }
+    }
+
+    private User findUserById(Long id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("ID inválido");
+        }
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+        return user;
     }
 
     private UserResponseDTO toResponseDTO(User user) {
@@ -73,11 +92,13 @@ public class UserService {
                 user.getRole());
     }
 
-    public List<UserResponseDTO> findAll(){
-        return userRepository.findAll()
-                .stream()
-                .map(this::toResponseDTO)
-                .toList();
+    private void validateEmailNotExistsForAnotherUser(String email, Long id) {
+        userRepository.findByEmail(email)
+                .ifPresent(user -> {
+                    if (!user.getId().equals(id)) {
+                        throw new ConflictException("Esse e-mail já está cadastrado");
+                    }
+                });
     }
-
 }
+
