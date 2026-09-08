@@ -26,20 +26,22 @@ public class UserService {
 
         validateEmailNotExists(email);
 
-        User user = UserMapper.toUser(createUserDTO);
-        user.setName(name);
-        user.setEmail(email);
+        CreateUserRequestDTO normalizedDTO =
+                new CreateUserRequestDTO(
+                        name,
+                        email,
+                        createUserDTO.password()
+                );
+
+        User user = UserMapper.toUser(normalizedDTO);
         user.setRole(Role.USER);
 
         userRepository.save(user);
     }
-
-
     public UserResponseDTO findById(Long id) {
         User user = findUserById(id);
         return UserMapper.toUserResponseDTO(user);
     }
-
     public UserResponseDTO findByEmail(String email) {
         String emailNormalized = validateAndNormalizeEmail(email);
         User user = userRepository.findByEmail(emailNormalized)
@@ -47,14 +49,12 @@ public class UserService {
 
         return UserMapper.toUserResponseDTO(user);
     }
-
     public List<UserResponseDTO> findAll() {
         return userRepository.findAll()
                 .stream()
                 .map(UserMapper::toUserResponseDTO)
                 .toList();
     }
-
     public UserResponseDTO update(Long id,
                                   UpdateUserRequestDTO updateUserRequestDTO) {
         User user = findUserById(id);
@@ -66,14 +66,10 @@ public class UserService {
         userRepository.save(user);
         return UserMapper.toUserResponseDTO(user);
     }
-
     public void delete(Long id) {
         User user = findUserById(id);
         userRepository.delete(user);
-
-
     }
-
     private void validateEmailNotExists(String email) {
         if (userRepository.existsByEmail(email)) {
             throw new ConflictException("E-mail já cadastrado ");
@@ -86,7 +82,6 @@ public class UserService {
         }
         return email.trim().toLowerCase();
     }
-
     private User findUserById(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("ID inválido");
@@ -95,7 +90,6 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         return user;
     }
-
     private void validateEmailNotExistsForAnotherUser(String email, Long id) {
         userRepository.findByEmail(email)
                 .ifPresent(user -> {
