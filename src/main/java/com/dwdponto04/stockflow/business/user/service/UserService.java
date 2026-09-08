@@ -21,7 +21,7 @@ public class UserService {
 
     public void createUser(CreateUserRequestDTO createUserDTO) {
         String name = createUserDTO.name().trim();
-        String email = createUserDTO.email().trim().toLowerCase();
+        String email = validateAndNormalizeEmail(createUserDTO.email());
 
         validateEmailNotExists(email);
 
@@ -40,10 +40,8 @@ public class UserService {
     }
 
     public UserResponseDTO findByEmail(String email) {
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("E-mail inválido");
-        }
-        User user = userRepository.findByEmail(email)
+        String emailNormalized = validateAndNormalizeEmail(email);
+        User user = userRepository.findByEmail(emailNormalized)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         return toResponseDTO(user);
@@ -60,7 +58,7 @@ public class UserService {
                                   UpdateUserRequestDTO updateUserRequestDTO) {
         User user = findUserById(id);
         String name = updateUserRequestDTO.name().trim();
-        String email = updateUserRequestDTO.email().trim().toLowerCase();
+        String email = validateAndNormalizeEmail(updateUserRequestDTO.email());
         validateEmailNotExistsForAnotherUser(email, id);
         user.setName(name);
         user.setEmail(email);
@@ -79,6 +77,12 @@ public class UserService {
         if (userRepository.existsByEmail(email)) {
             throw new ConflictException("E-mail já cadastrado ");
         }
+    }
+    private String validateAndNormalizeEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email não pode ser nulo ou vazio");
+        }
+        return email.trim().toLowerCase();
     }
 
     private User findUserById(Long id) {
