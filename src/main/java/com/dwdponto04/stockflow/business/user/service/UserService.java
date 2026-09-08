@@ -68,6 +68,13 @@ public class UserService {
         return toResponseDTO(user);
     }
 
+    public void delete(Long id){
+        User user = findUserById(id);
+        userRepository.delete(user);
+
+
+    }
+
     private void validateEmailNotExists(String email) {
         if (userRepository.existsByEmail(email)) {
             throw new ConflictException("E-mail já cadastrado ");
