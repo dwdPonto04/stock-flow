@@ -5,6 +5,7 @@ import com.dwdponto04.stockflow.business.user.dto.request.UpdateUserRequestDTO;
 import com.dwdponto04.stockflow.business.user.dto.response.UserResponseDTO;
 import com.dwdponto04.stockflow.business.user.entity.User;
 import com.dwdponto04.stockflow.business.user.enums.Role;
+import com.dwdponto04.stockflow.business.user.mapper.UserMapper;
 import com.dwdponto04.stockflow.infrastructure.exceptions.ConflictException;
 import com.dwdponto04.stockflow.infrastructure.exceptions.ResourceNotFoundException;
 import com.dwdponto04.stockflow.infrastructure.persistence.user.UserRepository;
@@ -25,18 +26,18 @@ public class UserService {
 
         validateEmailNotExists(email);
 
-        User user = new User();
+        User user = UserMapper.toUser(createUserDTO);
         user.setName(name);
         user.setEmail(email);
-        //todo implementar o algoritmo de hash para password no futuro.
-        user.setPassword(createUserDTO.password());
         user.setRole(Role.USER);
+
         userRepository.save(user);
     }
 
+
     public UserResponseDTO findById(Long id) {
         User user = findUserById(id);
-        return toResponseDTO(user);
+        return UserMapper.toUserResponseDTO(user);
     }
 
     public UserResponseDTO findByEmail(String email) {
@@ -44,13 +45,13 @@ public class UserService {
         User user = userRepository.findByEmail(emailNormalized)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        return toResponseDTO(user);
+        return UserMapper.toUserResponseDTO(user);
     }
 
     public List<UserResponseDTO> findAll() {
         return userRepository.findAll()
                 .stream()
-                .map(this::toResponseDTO)
+                .map(UserMapper::toUserResponseDTO)
                 .toList();
     }
 
@@ -63,10 +64,10 @@ public class UserService {
         user.setName(name);
         user.setEmail(email);
         userRepository.save(user);
-        return toResponseDTO(user);
+        return UserMapper.toUserResponseDTO(user);
     }
 
-    public void delete(Long id){
+    public void delete(Long id) {
         User user = findUserById(id);
         userRepository.delete(user);
 
@@ -78,6 +79,7 @@ public class UserService {
             throw new ConflictException("E-mail já cadastrado ");
         }
     }
+
     private String validateAndNormalizeEmail(String email) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email não pode ser nulo ou vazio");
@@ -92,15 +94,6 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         return user;
-    }
-
-    private UserResponseDTO toResponseDTO(User user) {
-
-        return new UserResponseDTO(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getRole());
     }
 
     private void validateEmailNotExistsForAnotherUser(String email, Long id) {
