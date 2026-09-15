@@ -20,7 +20,7 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public void createUser(CreateUserRequestDTO createUserDTO) {
+    public UserResponseDTO createUser(CreateUserRequestDTO createUserDTO) {
         String name = createUserDTO.name().trim();
         String email = validateAndNormalizeEmail(createUserDTO.email());
 
@@ -36,7 +36,9 @@ public class UserService {
         User user = UserMapper.toUser(normalizedDTO);
         user.setRole(Role.USER);
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        return UserMapper.toUserResponseDTO(savedUser);
     }
     public UserResponseDTO findById(Long id) {
         User user = findUserById(id);
