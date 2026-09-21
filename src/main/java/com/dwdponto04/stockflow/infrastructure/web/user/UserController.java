@@ -1,7 +1,8 @@
 package com.dwdponto04.stockflow.infrastructure.web.user;
 
 import com.dwdponto04.stockflow.business.user.dto.request.CreateUserRequestDTO;
-import com.dwdponto04.stockflow.business.user.dto.request.UpdateUserRequestDTO;
+import com.dwdponto04.stockflow.business.user.dto.request.PatchUserRequestDTO;
+import com.dwdponto04.stockflow.business.user.dto.request.PutUserRequestDTO;
 import com.dwdponto04.stockflow.business.user.dto.response.UserResponseDTO;
 import com.dwdponto04.stockflow.business.user.service.UserService;
 import jakarta.validation.Valid;
@@ -48,13 +49,23 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @PutMapping ("/{id}")
-    public ResponseEntity<UserResponseDTO> update(
+    @PatchMapping("/{id}")
+    public ResponseEntity<UserResponseDTO>updateWithPatch(
             @PathVariable Long id,
             @Valid @RequestBody
-            UpdateUserRequestDTO updateUserRequestDTO
+            PatchUserRequestDTO patchUserRequestDTO
     ){
-        UserResponseDTO responseDTO = userService.update(id,updateUserRequestDTO);
+        UserResponseDTO responseDTO = userService.updateWithPatch(id,patchUserRequestDTO);
+        return ResponseEntity.ok(responseDTO);
+    }
+
+    @PutMapping ("/{id}")
+    public ResponseEntity<UserResponseDTO> updateWithPut(
+            @PathVariable Long id,
+            @Valid @RequestBody
+            PutUserRequestDTO putUserRequestDTO
+    ){
+        UserResponseDTO responseDTO = userService.updateWithPut(id,putUserRequestDTO);
         return ResponseEntity.ok(responseDTO);
     }
 

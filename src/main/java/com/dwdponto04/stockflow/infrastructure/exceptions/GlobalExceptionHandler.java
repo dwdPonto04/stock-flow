@@ -34,6 +34,17 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(
+            IllegalArgumentException illegalArgumentException
+    ){
+
+        return buildErrorResponse(HttpStatus.BAD_REQUEST,
+                illegalArgumentException.getMessage(),
+                List.of()
+        );
+    }
+
     @ExceptionHandler (MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
             MethodArgumentNotValidException methodArgumentNotValidException

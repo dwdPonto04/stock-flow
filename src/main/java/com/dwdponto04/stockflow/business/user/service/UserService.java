@@ -1,7 +1,8 @@
 package com.dwdponto04.stockflow.business.user.service;
 
 import com.dwdponto04.stockflow.business.user.dto.request.CreateUserRequestDTO;
-import com.dwdponto04.stockflow.business.user.dto.request.UpdateUserRequestDTO;
+import com.dwdponto04.stockflow.business.user.dto.request.PatchUserRequestDTO;
+import com.dwdponto04.stockflow.business.user.dto.request.PutUserRequestDTO;
 import com.dwdponto04.stockflow.business.user.dto.response.UserResponseDTO;
 import com.dwdponto04.stockflow.business.user.entity.User;
 import com.dwdponto04.stockflow.business.user.enums.Role;
@@ -40,10 +41,12 @@ public class UserService {
 
         return UserMapper.toUserResponseDTO(savedUser);
     }
+
     public UserResponseDTO findById(Long id) {
         User user = findUserById(id);
         return UserMapper.toUserResponseDTO(user);
     }
+
     public UserResponseDTO findByEmail(String email) {
         String emailNormalized = validateAndNormalizeEmail(email);
         User user = userRepository.findByEmail(emailNormalized)
@@ -51,23 +54,59 @@ public class UserService {
 
         return UserMapper.toUserResponseDTO(user);
     }
+
     public List<UserResponseDTO> findAll() {
         return userRepository.findAll()
                 .stream()
                 .map(UserMapper::toUserResponseDTO)
                 .toList();
     }
-    public UserResponseDTO update(Long id,
-                                  UpdateUserRequestDTO updateUserRequestDTO) {
+
+    public UserResponseDTO updateWithPatch(Long id,
+                                           PatchUserRequestDTO patchUserRequestDTO){
         User user = findUserById(id);
-        String name = updateUserRequestDTO.name().trim();
-        String email = validateAndNormalizeEmail(updateUserRequestDTO.email());
+        String name = patchUserRequestDTO.name();
+        String email = patchUserRequestDTO.email();
+        boolean updated = false ;
+
+        if(name != null){
+            name = name.trim();
+            if(name.isEmpty()){
+                throw new IllegalArgumentException("O nome não pode ser vazio");
+        } else {
+                user.setName(name);
+                updated = true;
+            }
+        }
+
+        if(email != null){
+            email = validateAndNormalizeEmail(email);
+            validateEmailNotExistsForAnotherUser(email,id);
+            user.setEmail(email);
+            updated = true;
+        }
+
+        if (updated){
+            userRepository.save(user);
+        }else{
+            throw new IllegalArgumentException("Nenhum campo foi informado para atualização");
+        }
+        return UserMapper.toUserResponseDTO(user);
+
+    }
+
+    public UserResponseDTO updateWithPut(Long id,
+                                         PutUserRequestDTO putUserRequestDTO) {
+        User user = findUserById(id);
+        String name = putUserRequestDTO.name().trim();
+        String email = validateAndNormalizeEmail(putUserRequestDTO.email());
         validateEmailNotExistsForAnotherUser(email, id);
         user.setName(name);
         user.setEmail(email);
         userRepository.save(user);
         return UserMapper.toUserResponseDTO(user);
     }
+
     public void delete(Long id) {
         User user = findUserById(id);
         userRepository.delete(user);
@@ -80,7 +119,7 @@ public class UserService {
 
     private String validateAndNormalizeEmail(String email) {
         if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("Email não pode ser nulo ou vazio");
+            throw new IllegalArgumentException("E-mail não pode ser nulo ou vazio");
         }
         return email.trim().toLowerCase();
     }
