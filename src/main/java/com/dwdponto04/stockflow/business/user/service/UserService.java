@@ -11,6 +11,7 @@ import com.dwdponto04.stockflow.infrastructure.exceptions.ConflictException;
 import com.dwdponto04.stockflow.infrastructure.exceptions.ResourceNotFoundException;
 import com.dwdponto04.stockflow.infrastructure.persistence.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UserResponseDTO createUser(CreateUserRequestDTO createUserDTO) {
         String name = createUserDTO.name().trim();
@@ -31,7 +33,7 @@ public class UserService {
                 new CreateUserRequestDTO(
                         name,
                         email,
-                        createUserDTO.password()
+                       passwordEncoder.encode(createUserDTO.password())
                 );
 
         User user = UserMapper.toUser(normalizedDTO);
