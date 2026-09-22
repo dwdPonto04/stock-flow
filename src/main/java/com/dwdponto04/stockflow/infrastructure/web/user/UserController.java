@@ -3,6 +3,7 @@ package com.dwdponto04.stockflow.infrastructure.web.user;
 import com.dwdponto04.stockflow.business.user.dto.request.CreateUserRequestDTO;
 import com.dwdponto04.stockflow.business.user.dto.request.PatchUserRequestDTO;
 import com.dwdponto04.stockflow.business.user.dto.request.PutUserRequestDTO;
+import com.dwdponto04.stockflow.business.user.dto.request.UpdatePasswordRequestDTO;
 import com.dwdponto04.stockflow.business.user.dto.response.UserResponseDTO;
 import com.dwdponto04.stockflow.business.user.service.UserService;
 import jakarta.validation.Valid;
@@ -57,6 +58,16 @@ public class UserController {
     ){
         UserResponseDTO responseDTO = userService.updateWithPatch(id,patchUserRequestDTO);
         return ResponseEntity.ok(responseDTO);
+    }
+
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<Void> updatePassword(
+            @PathVariable Long id,
+            @Valid @RequestBody
+            UpdatePasswordRequestDTO updatePasswordRequestDTO
+    ){
+        userService.updatePassword(id, updatePasswordRequestDTO);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping ("/{id}")

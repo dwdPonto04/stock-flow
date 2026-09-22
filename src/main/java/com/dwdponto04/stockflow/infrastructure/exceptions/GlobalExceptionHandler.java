@@ -34,10 +34,18 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPassword(
+            InvalidPasswordException invalidPasswordException){
+
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED,
+                invalidPasswordException.getMessage(),
+                List.of());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(
-            IllegalArgumentException illegalArgumentException
-    ){
+            IllegalArgumentException illegalArgumentException){
 
         return buildErrorResponse(HttpStatus.BAD_REQUEST,
                 illegalArgumentException.getMessage(),
@@ -47,8 +55,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler (MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException methodArgumentNotValidException
-    ){
+            MethodArgumentNotValidException methodArgumentNotValidException){
+
         List<FieldErrorResponse> errorResponses =
                 methodArgumentNotValidException.getBindingResult()
                         .getFieldErrors()
@@ -67,8 +75,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler (MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(
-            MethodArgumentTypeMismatchException methodArgumentTypeMismatchException
-    ){
+            MethodArgumentTypeMismatchException methodArgumentTypeMismatchException){
 
         String message = String.format(
                 "O parâmetro '%s' deve ser do tipo %s",
@@ -85,8 +92,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
-            HttpMessageNotReadableException httpMessageNotReadableException
-    ){
+            HttpMessageNotReadableException httpMessageNotReadableException){
+
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 "Corpo da requisição inválido",
@@ -95,8 +102,8 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> handleMissingServletRequestParameter(
-            MissingServletRequestParameterException missingServletRequestParameterException
-    ){
+            MissingServletRequestParameterException missingServletRequestParameterException){
+
         String message = String.format(
                 "O parâmetro '%s' é obrigatório",
                 missingServletRequestParameterException.getParameterName()
@@ -109,8 +116,8 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(
-            Exception exception
-    ){
+            Exception exception){
+
         return buildErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Ocorreu um erro interno no servidor",
@@ -122,6 +129,7 @@ public class GlobalExceptionHandler {
             HttpStatus status,
             String message,
             List<FieldErrorResponse> errors){
+
         return ResponseEntity
                 .status(status)
                 .body(new ErrorResponse(

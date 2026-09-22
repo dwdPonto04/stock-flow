@@ -3,11 +3,13 @@ package com.dwdponto04.stockflow.business.user.service;
 import com.dwdponto04.stockflow.business.user.dto.request.CreateUserRequestDTO;
 import com.dwdponto04.stockflow.business.user.dto.request.PatchUserRequestDTO;
 import com.dwdponto04.stockflow.business.user.dto.request.PutUserRequestDTO;
+import com.dwdponto04.stockflow.business.user.dto.request.UpdatePasswordRequestDTO;
 import com.dwdponto04.stockflow.business.user.dto.response.UserResponseDTO;
 import com.dwdponto04.stockflow.business.user.entity.User;
 import com.dwdponto04.stockflow.business.user.enums.Role;
 import com.dwdponto04.stockflow.business.user.mapper.UserMapper;
 import com.dwdponto04.stockflow.infrastructure.exceptions.ConflictException;
+import com.dwdponto04.stockflow.infrastructure.exceptions.InvalidPasswordException;
 import com.dwdponto04.stockflow.infrastructure.exceptions.ResourceNotFoundException;
 import com.dwdponto04.stockflow.infrastructure.persistence.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +35,7 @@ public class UserService {
                 new CreateUserRequestDTO(
                         name,
                         email,
-                       passwordEncoder.encode(createUserDTO.password())
+                        passwordEncoder.encode(createUserDTO.password())
                 );
 
         User user = UserMapper.toUser(normalizedDTO);
@@ -64,37 +66,51 @@ public class UserService {
                 .toList();
     }
 
-    public UserResponseDTO updateWithPatch(Long id,
-                                           PatchUserRequestDTO patchUserRequestDTO){
+    public UserResponseDTO updateWithPatch(Long id, PatchUserRequestDTO patchUserRequestDTO) {
         User user = findUserById(id);
         String name = patchUserRequestDTO.name();
         String email = patchUserRequestDTO.email();
-        boolean updated = false ;
+        boolean updated = false;
 
-        if(name != null){
+        if (name != null) {
             name = name.trim();
-            if(name.isEmpty()){
+            if (name.isEmpty()) {
                 throw new IllegalArgumentException("O nome não pode ser vazio");
-        } else {
+            } else {
                 user.setName(name);
                 updated = true;
             }
         }
 
-        if(email != null){
+        if (email != null) {
             email = validateAndNormalizeEmail(email);
-            validateEmailNotExistsForAnotherUser(email,id);
+            validateEmailNotExistsForAnotherUser(email, id);
             user.setEmail(email);
             updated = true;
         }
 
-        if (updated){
+        if (updated) {
             userRepository.save(user);
-        }else{
+        } else {
             throw new IllegalArgumentException("Nenhum campo foi informado para atualização");
         }
         return UserMapper.toUserResponseDTO(user);
 
+    }
+
+    public void updatePassword(Long id, UpdatePasswordRequestDTO updatePasswordRequestDTO) {
+        User user = findUserById(id);
+        if (!passwordEncoder.matches(updatePasswordRequestDTO.currentPassword(),
+                user.getPassword())) {
+            throw new InvalidPasswordException("A senha atual está incorreta");
+        }
+        if (!updatePasswordRequestDTO.newPassword()
+                .equals(updatePasswordRequestDTO.confirmNewPassword())) {
+            throw new IllegalArgumentException("A nova senha e a confirmação não são iguais");
+        }
+        user.setPassword(passwordEncoder.
+                encode(updatePasswordRequestDTO.newPassword()));
+        userRepository.save(user);
     }
 
     public UserResponseDTO updateWithPut(Long id,
@@ -113,6 +129,7 @@ public class UserService {
         User user = findUserById(id);
         userRepository.delete(user);
     }
+
     private void validateEmailNotExists(String email) {
         if (userRepository.existsByEmail(email)) {
             throw new ConflictException("E-mail já cadastrado ");
@@ -125,6 +142,7 @@ public class UserService {
         }
         return email.trim().toLowerCase();
     }
+
     private User findUserById(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("ID inválido");
@@ -133,6 +151,7 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         return user;
     }
+
     private void validateEmailNotExistsForAnotherUser(String email, Long id) {
         userRepository.findByEmail(email)
                 .ifPresent(user -> {
