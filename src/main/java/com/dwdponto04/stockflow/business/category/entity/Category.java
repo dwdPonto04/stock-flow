@@ -22,8 +22,8 @@ public class Category {
     private Long id;
 
     @NotBlank
-    @Size(max = 50)
+    @Size(max = 20)
     @Setter
-    @Column(name = "name",length =50, unique = true, nullable = false)
+    @Column(name = "name",length =20, unique = true, nullable = false)
     private String name;
 }

@@ -1,6 +1,7 @@
 package com.dwdponto04.stockflow.business.category.service;
 
 import com.dwdponto04.stockflow.business.category.dto.request.CreateCategoryRequestDTO;
+import com.dwdponto04.stockflow.business.category.dto.request.PutCategoryRequestDTO;
 import com.dwdponto04.stockflow.business.category.dto.response.CategoryResponseDTO;
 import com.dwdponto04.stockflow.business.category.entity.Category;
 import com.dwdponto04.stockflow.business.category.mapper.CategoryMapper;
@@ -19,7 +20,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     public CategoryResponseDTO createCategory(CreateCategoryRequestDTO createCategoryRequestDTO){
-        String name = createCategoryRequestDTO.name().trim();
+        String name = normalizedName(createCategoryRequestDTO.name());
         validateNameNotExists(name);
 
         CreateCategoryRequestDTO categoryRequestDTO =
@@ -34,9 +35,9 @@ public class CategoryService {
     }
 
     public CategoryResponseDTO findByName(String name){
-        String nameNormalized = name.trim();
+        String newname = normalizedName(name);
 
-        Category category = categoryRepository.findByNameIgnoreCase(nameNormalized).orElseThrow(()
+        Category category = categoryRepository.findByNameIgnoreCase(newname).orElseThrow(()
         -> new ResourceNotFoundException ("Categoria não encontrada"));
 
         return CategoryMapper.toCategoryResponse(category);
@@ -55,6 +56,19 @@ public class CategoryService {
                 .toList();
     }
 
+    public CategoryResponseDTO updateWithPut(Long id,
+                                             PutCategoryRequestDTO putCategoryRequestDTO){
+        Category category = findCategoryById(id);
+        String name = normalizedName(putCategoryRequestDTO.name());
+        validateNameNotExistForAnotherCategory(name, id);
+
+        category.setName(name);
+        categoryRepository.save(category);
+
+        return CategoryMapper.toCategoryResponse(category);
+
+    }
+
     private Category findCategoryById(Long id){
         if (id == null || id <= 0){
             throw new IllegalArgumentException("ID inválido");
@@ -63,6 +77,20 @@ public class CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada")
                 );
         return category;
+    }
+
+    private void validateNameNotExistForAnotherCategory(String name, Long id){
+        categoryRepository.findByNameIgnoreCase(name)
+                .ifPresent(category -> {
+                    if (!category.getId().equals(id)){
+                        throw new ConflictException("Essa categoria já esta cadastrada");
+                    }
+
+        });
+    }
+
+    private String normalizedName (String name){
+        return name.trim();
     }
 
     private void validateNameNotExists(String name){
