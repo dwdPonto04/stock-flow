@@ -1,6 +1,5 @@
 package com.dwdponto04.stockflow.business.product.mapper;
 
-import com.dwdponto04.stockflow.business.category.dto.response.CategoryResponseDTO;
 import com.dwdponto04.stockflow.business.category.mapper.CategoryMapper;
 import com.dwdponto04.stockflow.business.product.dto.request.CreateProductRequestDTO;
 import com.dwdponto04.stockflow.business.product.dto.response.ProductResponseDTO;
