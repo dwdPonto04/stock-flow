@@ -11,6 +11,7 @@ import java.util.UUID;
 @Repository
 public interface ProductRepository extends JpaRepository<Product,Long> {
 
+
     boolean existsByNameIgnoreCase(String name);
 
     Optional<Product> findByNameIgnoreCase(String name);

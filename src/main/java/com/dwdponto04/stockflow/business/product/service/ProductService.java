@@ -3,6 +3,7 @@ package com.dwdponto04.stockflow.business.product.service;
 
 import com.dwdponto04.stockflow.business.category.entity.Category;
 import com.dwdponto04.stockflow.business.product.dto.request.CreateProductRequestDTO;
+import com.dwdponto04.stockflow.business.product.dto.request.UpdateWithPutDTO;
 import com.dwdponto04.stockflow.business.product.dto.response.ProductResponseDTO;
 import com.dwdponto04.stockflow.business.product.entity.Product;
 import com.dwdponto04.stockflow.business.product.mapper.ProductMapper;
@@ -25,27 +26,21 @@ public class ProductService {
 
 
     public ProductResponseDTO createProduct(CreateProductRequestDTO createProductRequestDTO) {
-        String name = normalizedName(createProductRequestDTO.name());
+        String name = normalizeName(createProductRequestDTO.name());
         validateName(name);
-        Category category = categoryRepository.findById(
-                createProductRequestDTO.categoryId()).orElseThrow(
-                () -> new ResourceNotFoundException("Categoria não encontrada")
-        );
-
-
+        Category category = findCategoryById(createProductRequestDTO.categoryId());
         Product product = ProductMapper.toProduct(createProductRequestDTO);
         product.setName(name);
         product.setCategory(category);
         product.setCode(UUID.randomUUID());
 
         Product productSaved = productRepository.save(product);
-
         return ProductMapper.toResponseProduct(productSaved);
 
     }
 
     public ProductResponseDTO findByName(String name) {
-        String normalizedName = normalizedName(name);
+        String normalizedName = normalizeName(name);
         Product product = productRepository.findByNameIgnoreCase(normalizedName)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Produto não encontrado no sistema"));
@@ -53,7 +48,7 @@ public class ProductService {
 
     }
 
-    public List<ProductResponseDTO> findByCategoryName(Long categoryId){
+    public List<ProductResponseDTO> findByCategoryId(Long categoryId){
         return productRepository
                 .findByCategoryId(categoryId)
                 .stream()
@@ -77,8 +72,38 @@ public class ProductService {
         return ProductMapper.toResponseProduct(product);
     }
 
+    public ProductResponseDTO updateWithPut(Long id, UpdateWithPutDTO putDTO){
 
-    private String normalizedName(String name) {
+        Product product = findProductById(id);
+        String name = normalizeName(putDTO.name());
+
+        product.setName(name);
+        product.setPrice(putDTO.price());
+        product.setDescription(putDTO.description());
+        product.setQuantity(putDTO.quantity());
+        product.setCategory(findCategoryById(putDTO.categoryId()));
+
+        Product updatedProduct = productRepository.save(product);
+        return ProductMapper.toResponseProduct(updatedProduct);
+    }
+
+    private Category findCategoryById(Long categoryId){
+        return categoryRepository.findById(categoryId).orElseThrow(
+                () -> new ResourceNotFoundException("Categoria não encontrada")
+        );
+    }
+
+    private Product findProductById(Long id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("ID inválido");
+        }
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado")
+                );
+    }
+
+
+    private String normalizeName(String name) {
         return name.trim();
     }
 
