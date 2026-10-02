@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
-public record UpdateWithPutDTO(
+public record PutProductRequestDTO(
         @NotBlank(message = "O nome do produto é obrigatório")
         @Size(max = 70,message = "Tamanho máximo para o nome do produto é de 70 caracteres")
         String name,

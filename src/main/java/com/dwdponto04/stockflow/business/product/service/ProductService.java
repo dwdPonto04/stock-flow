@@ -3,7 +3,8 @@ package com.dwdponto04.stockflow.business.product.service;
 
 import com.dwdponto04.stockflow.business.category.entity.Category;
 import com.dwdponto04.stockflow.business.product.dto.request.CreateProductRequestDTO;
-import com.dwdponto04.stockflow.business.product.dto.request.UpdateWithPutDTO;
+import com.dwdponto04.stockflow.business.product.dto.request.PatchProductRequestDTO;
+import com.dwdponto04.stockflow.business.product.dto.request.PutProductRequestDTO;
 import com.dwdponto04.stockflow.business.product.dto.response.ProductResponseDTO;
 import com.dwdponto04.stockflow.business.product.entity.Product;
 import com.dwdponto04.stockflow.business.product.mapper.ProductMapper;
@@ -72,7 +73,50 @@ public class ProductService {
         return ProductMapper.toResponseProduct(product);
     }
 
-    public ProductResponseDTO updateWithPut(Long id, UpdateWithPutDTO putDTO){
+    public ProductResponseDTO updateWithPatch(Long id, PatchProductRequestDTO patchDTO){
+
+        if (patchDTO.name() == null &&
+                patchDTO.description() == null &&
+                patchDTO.price() == null &&
+                patchDTO.quantity() == null &&
+                patchDTO.categoryId() == null) {
+
+            throw new IllegalArgumentException(
+                    "É necessário informar ao menos um campo para atualização"
+            );
+        }
+        Product product = findProductById(id);
+
+        if(patchDTO.name() != null){
+            String name = normalizeName(patchDTO.name());
+            if(name.isEmpty()){
+                throw new IllegalArgumentException("Nome do produto não pode ser vazio");
+            }
+            product.setName(name);
+        }
+        if (patchDTO.description() != null){
+            product.setDescription(patchDTO.description());
+        }
+        if (patchDTO.price() != null){
+            product.setPrice(patchDTO.price());
+        }
+        if (patchDTO.quantity() != null){
+            product.setQuantity(patchDTO.quantity());
+        }
+        if (patchDTO.categoryId() != null){
+            product.setCategory(categoryRepository.findById(patchDTO.categoryId()).orElseThrow(
+                    () -> new ResourceNotFoundException("Categoria de produto não identificada")
+            ));
+        }
+
+
+        Product updateProduct = productRepository.save(product);
+        return ProductMapper.toResponseProduct(updateProduct);
+
+    }
+
+
+    public ProductResponseDTO updateWithPut(Long id, PutProductRequestDTO putDTO){
 
         Product product = findProductById(id);
         String name = normalizeName(putDTO.name());
