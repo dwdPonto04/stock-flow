@@ -131,6 +131,11 @@ public class ProductService {
         return ProductMapper.toResponseProduct(updatedProduct);
     }
 
+    public void delete(Long id){
+        Product product = findProductById(id);
+        productRepository.delete(product);
+    }
+
     private Category findCategoryById(Long categoryId){
         return categoryRepository.findById(categoryId).orElseThrow(
                 () -> new ResourceNotFoundException("Categoria não encontrada")
