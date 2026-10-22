@@ -49,7 +49,7 @@ public class ProductService {
 
     }
 
-    public List<ProductResponseDTO> findByCategoryId(Long categoryId){
+    public List<ProductResponseDTO> findByCategoryId(Long categoryId) {
         return productRepository
                 .findByCategoryId(categoryId)
                 .stream()
@@ -57,8 +57,19 @@ public class ProductService {
                 .toList();
     }
 
+    public List<ProductResponseDTO> findByPartialName(String name){
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("O nome para busca não pode ser vazio");
+        }
+        return productRepository
+                .findByNameContainingIgnoreCase(normalizeName(name))
+                .stream()
+                .map(ProductMapper::toResponseProduct)
+                .toList();
+    }
 
-    public List<ProductResponseDTO> findAll(){
+
+    public List<ProductResponseDTO> findAll() {
         return productRepository
                 .findAll()
                 .stream()
@@ -73,7 +84,7 @@ public class ProductService {
         return ProductMapper.toResponseProduct(product);
     }
 
-    public ProductResponseDTO updateWithPatch(Long id, PatchProductRequestDTO patchDTO){
+    public ProductResponseDTO updateWithPatch(Long id, PatchProductRequestDTO patchDTO) {
 
         if (patchDTO.name() == null &&
                 patchDTO.description() == null &&
@@ -87,28 +98,27 @@ public class ProductService {
         }
         Product product = findProductById(id);
 
-        if(patchDTO.name() != null){
+        if (patchDTO.name() != null) {
             String name = normalizeName(patchDTO.name());
-            if(name.isEmpty()){
+            if (name.isEmpty()) {
                 throw new IllegalArgumentException("Nome do produto não pode ser vazio");
             }
             product.setName(name);
         }
-        if (patchDTO.description() != null){
+        if (patchDTO.description() != null) {
             product.setDescription(patchDTO.description());
         }
-        if (patchDTO.price() != null){
+        if (patchDTO.price() != null) {
             product.setPrice(patchDTO.price());
         }
-        if (patchDTO.quantity() != null){
+        if (patchDTO.quantity() != null) {
             product.setQuantity(patchDTO.quantity());
         }
-        if (patchDTO.categoryId() != null){
+        if (patchDTO.categoryId() != null) {
             product.setCategory(categoryRepository.findById(patchDTO.categoryId()).orElseThrow(
                     () -> new ResourceNotFoundException("Categoria de produto não identificada")
             ));
         }
-
 
         Product updateProduct = productRepository.save(product);
         return ProductMapper.toResponseProduct(updateProduct);
@@ -116,7 +126,7 @@ public class ProductService {
     }
 
 
-    public ProductResponseDTO updateWithPut(Long id, PutProductRequestDTO putDTO){
+    public ProductResponseDTO updateWithPut(Long id, PutProductRequestDTO putDTO) {
 
         Product product = findProductById(id);
         String name = normalizeName(putDTO.name());
@@ -131,12 +141,12 @@ public class ProductService {
         return ProductMapper.toResponseProduct(updatedProduct);
     }
 
-    public void delete(Long id){
+    public void delete(Long id) {
         Product product = findProductById(id);
         productRepository.delete(product);
     }
 
-    private Category findCategoryById(Long categoryId){
+    private Category findCategoryById(Long categoryId) {
         return categoryRepository.findById(categoryId).orElseThrow(
                 () -> new ResourceNotFoundException("Categoria não encontrada")
         );
